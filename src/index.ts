@@ -1,13 +1,22 @@
 export {
   blogApiMiyamoToday,
-  type BlogApiIntegrationOptions,
+  type IntegrationOptions,
 } from "./integration";
 export {
-  blogApiLoader,
-  blogApiSchema,
-  type BlogApiLoaderOptions,
+  articlesLoader,
+  articlesSchema,
+  tagsLoader,
+  tagsSchema,
+  type ArticlesLoaderOptions,
+  type TagsLoaderOptions,
 } from "./collection";
-export { sync, type SyncOptions, type SyncResult, type SyncLogger } from "./sync";
+export {
+  sync,
+  type SyncOptions,
+  type SyncResult,
+  type SyncLogger,
+  type TagEntry,
+} from "./sync";
 export { fetchAllArticles, type Article } from "./client";
 
 import { blogApiMiyamoToday } from "./integration";

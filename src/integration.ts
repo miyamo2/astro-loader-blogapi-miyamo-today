@@ -13,9 +13,11 @@ const optionsSchema = z.object({
   contentDir: z.string().default("src/content/blogapi"),
   /** Directory (relative to the project root) where thumbnails are written */
   assetsDir: z.string().default("src/assets/blogapi"),
+  /** File (relative to the project root) where aggregated tags are written. Defaults to `{contentDir}/tags.json` */
+  tagsFile: z.string().optional(),
 });
 
-export type BlogApiIntegrationOptions = z.input<typeof optionsSchema>;
+export type IntegrationOptions = z.input<typeof optionsSchema>;
 
 const PKG = "astro-loader-blogapi-miyamo-today";
 
@@ -23,7 +25,7 @@ const PKG = "astro-loader-blogapi-miyamo-today";
 // once per process so editing astro.config does not re-fetch the whole API.
 let hasSynced = false;
 
-export const blogApiMiyamoToday = (options: BlogApiIntegrationOptions): AstroIntegration => {
+export const blogApiMiyamoToday = (options: IntegrationOptions): AstroIntegration => {
   return {
     name: PKG,
     hooks: {
@@ -50,6 +52,9 @@ export const blogApiMiyamoToday = (options: BlogApiIntegrationOptions): AstroInt
           token: parsed.data.token,
           contentDir: path.resolve(root, parsed.data.contentDir),
           assetsDir: path.resolve(root, parsed.data.assetsDir),
+          tagsFile: parsed.data.tagsFile
+            ? path.resolve(root, parsed.data.tagsFile)
+            : undefined,
           logger,
         });
         hasSynced = true;
