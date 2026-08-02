@@ -17,7 +17,7 @@ const optionsSchema = z.object({
   tagsFile: z.string().optional(),
 });
 
-export type BlogApiIntegrationOptions = z.input<typeof optionsSchema>;
+export type IntegrationOptions = z.input<typeof optionsSchema>;
 
 const PKG = "astro-loader-blogapi-miyamo-today";
 
@@ -25,7 +25,7 @@ const PKG = "astro-loader-blogapi-miyamo-today";
 // once per process so editing astro.config does not re-fetch the whole API.
 let hasSynced = false;
 
-export const blogApiMiyamoToday = (options: BlogApiIntegrationOptions): AstroIntegration => {
+export const blogApiMiyamoToday = (options: IntegrationOptions): AstroIntegration => {
   return {
     name: PKG,
     hooks: {

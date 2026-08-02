@@ -1,14 +1,14 @@
 export {
   blogApiMiyamoToday,
-  type BlogApiIntegrationOptions,
+  type IntegrationOptions,
 } from "./integration";
 export {
-  blogApiArticlesLoader,
-  blogApiArticlesSchema,
-  blogApiTagsLoader,
-  blogApiTagsSchema,
-  type BlogApiArticlesLoaderOptions,
-  type BlogApiTagsLoaderOptions,
+  articlesLoader,
+  articlesSchema,
+  tagsLoader,
+  tagsSchema,
+  type ArticlesLoaderOptions,
+  type TagsLoaderOptions,
 } from "./collection";
 export {
   sync,

@@ -1,7 +1,7 @@
 import { file, glob } from "astro/loaders";
 import { z } from "astro/zod";
 
-export interface BlogApiArticlesLoaderOptions {
+export interface ArticlesLoaderOptions {
   /** Base directory of the generated `.md` files. Must match the integration's `contentDir`. */
   base?: string;
   /** Glob pattern(s) relative to `base`. */
@@ -12,13 +12,13 @@ export interface BlogApiArticlesLoaderOptions {
  * A `glob()` loader preconfigured for the directory the integration writes
  * article `.md` files into. Pass it to `defineCollection({ loader: ... })`.
  */
-export const blogApiArticlesLoader = (options: BlogApiArticlesLoaderOptions = {}) =>
+export const articlesLoader = (options: ArticlesLoaderOptions = {}) =>
   glob({
     pattern: options.pattern ?? "**/*.md",
     base: options.base ?? "./src/content/blogapi",
   });
 
-export interface BlogApiTagsLoaderOptions {
+export interface TagsLoaderOptions {
   /** Path of the generated tags JSON file. Must match the integration's `tagsFile`. */
   file?: string;
 }
@@ -28,7 +28,7 @@ export interface BlogApiTagsLoaderOptions {
  * One entry per tag, so `/tags` and `/tags/{tag}` pages can be built from
  * the collection without issuing any GraphQL from the site.
  */
-export const blogApiTagsLoader = (options: BlogApiTagsLoaderOptions = {}) =>
+export const tagsLoader = (options: TagsLoaderOptions = {}) =>
   file(options.file ?? "./src/content/blogapi/tags.json");
 
 /**
@@ -36,7 +36,7 @@ export const blogApiTagsLoader = (options: BlogApiTagsLoaderOptions = {}) =>
  * `articles` holds the frontmatter `id`s of the articles carrying the tag,
  * newest first — filter the article collection with them.
  */
-export const blogApiTagsSchema = z.object({
+export const tagsSchema = z.object({
   id: z.string(),
   name: z.string(),
   articles: z.array(z.string()),
@@ -51,9 +51,9 @@ interface SchemaContextLike {
 /**
  * Frontmatter schema of the generated article `.md` files. `thumbnail` goes
  * through `image()` so Astro optimizes the locally downloaded file.
- * Use as `defineCollection({ schema: blogApiArticlesSchema, ... })`.
+ * Use as `defineCollection({ schema: articlesSchema, ... })`.
  */
-export const blogApiArticlesSchema = ({ image }: SchemaContextLike) =>
+export const articlesSchema = ({ image }: SchemaContextLike) =>
   z.object({
     id: z.string(),
     title: z.string(),
