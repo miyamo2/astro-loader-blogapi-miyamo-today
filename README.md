@@ -64,16 +64,16 @@ Keep `token` in an environment variable — never commit it.
 ```ts
 import { defineCollection } from "astro:content";
 import {
-  blogApiLoader,
-  blogApiSchema,
+  blogApiArticlesLoader,
+  blogApiArticlesSchema,
   blogApiTagsLoader,
   blogApiTagsSchema,
 } from "@miyamo2/astro-loader-blogapi-miyamo-today";
 
 export const collections = {
   blogapi: defineCollection({
-    loader: blogApiLoader(), // pass { base } if you changed contentDir
-    schema: blogApiSchema,
+    loader: blogApiArticlesLoader(), // pass { base } if you changed contentDir
+    schema: blogApiArticlesSchema,
   }),
   blogapiTags: defineCollection({
     loader: blogApiTagsLoader(), // pass { file } if you changed tagsFile

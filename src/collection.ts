@@ -1,7 +1,7 @@
 import { file, glob } from "astro/loaders";
 import { z } from "astro/zod";
 
-export interface BlogApiLoaderOptions {
+export interface BlogApiArticlesLoaderOptions {
   /** Base directory of the generated `.md` files. Must match the integration's `contentDir`. */
   base?: string;
   /** Glob pattern(s) relative to `base`. */
@@ -10,9 +10,9 @@ export interface BlogApiLoaderOptions {
 
 /**
  * A `glob()` loader preconfigured for the directory the integration writes
- * `.md` files into. Pass it to `defineCollection({ loader: ... })`.
+ * article `.md` files into. Pass it to `defineCollection({ loader: ... })`.
  */
-export const blogApiLoader = (options: BlogApiLoaderOptions = {}) =>
+export const blogApiArticlesLoader = (options: BlogApiArticlesLoaderOptions = {}) =>
   glob({
     pattern: options.pattern ?? "**/*.md",
     base: options.base ?? "./src/content/blogapi",
@@ -49,11 +49,11 @@ interface SchemaContextLike {
 }
 
 /**
- * Frontmatter schema of the generated `.md` files. `thumbnail` goes through
- * `image()` so Astro optimizes the locally downloaded file.
- * Use as `defineCollection({ schema: blogApiSchema, ... })`.
+ * Frontmatter schema of the generated article `.md` files. `thumbnail` goes
+ * through `image()` so Astro optimizes the locally downloaded file.
+ * Use as `defineCollection({ schema: blogApiArticlesSchema, ... })`.
  */
-export const blogApiSchema = ({ image }: SchemaContextLike) =>
+export const blogApiArticlesSchema = ({ image }: SchemaContextLike) =>
   z.object({
     id: z.string(),
     title: z.string(),

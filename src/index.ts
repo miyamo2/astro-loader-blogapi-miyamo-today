@@ -3,11 +3,11 @@ export {
   type BlogApiIntegrationOptions,
 } from "./integration";
 export {
-  blogApiLoader,
-  blogApiSchema,
+  blogApiArticlesLoader,
+  blogApiArticlesSchema,
   blogApiTagsLoader,
   blogApiTagsSchema,
-  type BlogApiLoaderOptions,
+  type BlogApiArticlesLoaderOptions,
   type BlogApiTagsLoaderOptions,
 } from "./collection";
 export {
