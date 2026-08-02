@@ -20,6 +20,8 @@ export interface SyncOptions {
   contentDir: string;
   /** Absolute path of the directory where thumbnail images are written */
   assetsDir: string;
+  /** Absolute path of the aggregated tags JSON file. Defaults to `{contentDir}/tags.json` */
+  tagsFile?: string;
   logger?: SyncLogger;
 }
 
@@ -36,6 +38,8 @@ export interface SyncResult {
   downloaded: number;
   /** stale files removed by GC */
   removed: number;
+  /** tags aggregated into the tags file */
+  tags: number;
 }
 
 const consoleLogger: SyncLogger = {
@@ -102,6 +106,41 @@ const ensureThumbnail = async (
   return { fileName, downloaded: true };
 };
 
+export interface TagEntry {
+  /** tag id (the tag edge cursor of the GraphQL API) */
+  id: string;
+  /** tag display name */
+  name: string;
+  /** ids of the articles carrying this tag, newest (`createdAt`) first */
+  articles: string[];
+}
+
+/**
+ * Aggregates tags from the articles that were materialized as `.md` files,
+ * so tag pages built from this data never reference a missing article.
+ * Output is deterministic: tags sorted by name, articles newest-first.
+ */
+const aggregateTags = (articles: Article[]): TagEntry[] => {
+  const sorted = [...articles].sort((a, b) => {
+    const byCreatedAt = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (byCreatedAt !== 0) return byCreatedAt;
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  });
+  const tags = new Map<string, TagEntry>();
+  for (const article of sorted) {
+    for (const edge of article.tags.edges) {
+      const entry = tags.get(edge.cursor) ?? {
+        id: edge.cursor,
+        name: edge.node.name,
+        articles: [],
+      };
+      entry.articles.push(article.id);
+      tags.set(edge.cursor, entry);
+    }
+  }
+  return [...tags.values()].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+};
+
 const frontmatter = (article: Article, thumbnailPath: string): string =>
   stringify({
     id: article.id,
@@ -124,9 +163,11 @@ const frontmatter = (article: Article, thumbnailPath: string): string =>
 export const sync = async (options: SyncOptions): Promise<SyncResult> => {
   const logger = options.logger ?? consoleLogger;
   const { url, token, contentDir, assetsDir } = options;
+  const tagsFile = options.tagsFile ?? path.join(contentDir, "tags.json");
 
   await mkdir(contentDir, { recursive: true });
   await mkdir(assetsDir, { recursive: true });
+  await mkdir(path.dirname(tagsFile), { recursive: true });
 
   const { articles, pages } = await fetchAllArticles(url, token);
   logger.info(`fetched ${articles.length} articles in ${pages} page(s)`);
@@ -139,9 +180,11 @@ export const sync = async (options: SyncOptions): Promise<SyncResult> => {
     unchanged: 0,
     downloaded: 0,
     removed: 0,
+    tags: 0,
   };
   const expectedContents = new Set<string>();
   const expectedAssets = new Set<string>();
+  const materialized: Article[] = [];
 
   await Promise.all(
     articles.map(async (article) => {
@@ -157,6 +200,7 @@ export const sync = async (options: SyncOptions): Promise<SyncResult> => {
       const { fileName, downloaded } = await ensureThumbnail(article, assetsDir, existingAssets);
       if (downloaded) result.downloaded++;
       expectedAssets.add(fileName);
+      materialized.push(article);
 
       const mdName = `${sanitizeId(article.id)}.md`;
       expectedContents.add(mdName);
@@ -179,6 +223,14 @@ export const sync = async (options: SyncOptions): Promise<SyncResult> => {
     }),
   );
 
+  const tagEntries = aggregateTags(materialized);
+  result.tags = tagEntries.length;
+  const tagsJson = `${JSON.stringify(tagEntries, null, 2)}\n`;
+  const existingTagsJson = await readFile(tagsFile, "utf-8").catch(() => null);
+  if (existingTagsJson !== tagsJson) {
+    await writeFile(tagsFile, tagsJson, "utf-8");
+  }
+
   // GC: drop files whose article no longer exists (or whose thumbnail URL changed)
   const staleContents = (await readdir(contentDir)).filter(
     (name) => name.endsWith(".md") && !expectedContents.has(name),
@@ -196,7 +248,7 @@ export const sync = async (options: SyncOptions): Promise<SyncResult> => {
   logger.info(
     `sync done: ${result.written} written, ${result.unchanged} unchanged, ` +
       `${result.downloaded} downloaded, ${result.withoutThumbnail} without thumbnail, ` +
-      `${result.removed} removed`,
+      `${result.removed} removed, ${result.tags} tags`,
   );
   return result;
 };

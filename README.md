@@ -12,8 +12,9 @@ Instead of a custom Content Layer loader, this package materializes real files b
 astro:config:setup hook
   ├─ fetch all articles from the GraphQL API (Relay cursor pagination / first: 24 / Bearer auth)
   ├─ download thumbnails into src/assets/blogapi/
-  └─ write src/content/blogapi/{id}.md (YAML frontmatter, thumbnail as local relative path)
-site side: glob() loader + image() schema — plain local markdown
+  ├─ write src/content/blogapi/{id}.md (YAML frontmatter, thumbnail as local relative path)
+  └─ write src/content/blogapi/tags.json (tags aggregated from the fetched articles)
+site side: glob()/file() loaders — plain local markdown + JSON, no site-side GraphQL
 ```
 
 - Articles without a thumbnail are skipped (no `.md` is generated).
@@ -50,6 +51,7 @@ export default defineConfig({
       // optional (defaults shown):
       // contentDir: "src/content/blogapi",
       // assetsDir: "src/assets/blogapi",
+      // tagsFile: "src/content/blogapi/tags.json",
     }),
   ],
 });
@@ -61,12 +63,21 @@ Keep `token` in an environment variable — never commit it.
 
 ```ts
 import { defineCollection } from "astro:content";
-import { blogApiLoader, blogApiSchema } from "@miyamo2/astro-loader-blogapi-miyamo-today";
+import {
+  blogApiLoader,
+  blogApiSchema,
+  blogApiTagsLoader,
+  blogApiTagsSchema,
+} from "@miyamo2/astro-loader-blogapi-miyamo-today";
 
 export const collections = {
   blogapi: defineCollection({
     loader: blogApiLoader(), // pass { base } if you changed contentDir
     schema: blogApiSchema,
+  }),
+  blogapiTags: defineCollection({
+    loader: blogApiTagsLoader(), // pass { file } if you changed tagsFile
+    schema: blogApiTagsSchema,
   }),
 };
 ```
@@ -86,6 +97,56 @@ const { Content } = await render(articles[0]);
 ```
 
 Frontmatter fields: `id`, `title`, `createdAt`, `updatedAt`, `thumbnail` (local relative path, resolved by `image()`), `tags: [{ id, name }]`.
+
+### 4. Tag pages — no site-side GraphQL
+
+The integration aggregates tags from the fetched articles into `tags.json`
+(one entry per tag: `{ id, name, articles }`, where `articles` holds the
+frontmatter `id`s of the tagged articles, newest first). `/tags` and
+`/tags/{tag}` pages can be built entirely from the collections:
+
+```astro
+---
+// src/pages/tags/index.astro
+import { getCollection } from "astro:content";
+
+const tags = await getCollection("blogapiTags");
+---
+<ul>
+  {tags.map((tag) => (
+    <li>
+      <a href={`/tags/${tag.data.id}/`}>{tag.data.name} ({tag.data.articles.length})</a>
+    </li>
+  ))}
+</ul>
+```
+
+```astro
+---
+// src/pages/tags/[id].astro
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const tags = await getCollection("blogapiTags");
+  return tags.map((tag) => ({ params: { id: tag.data.id }, props: { tag } }));
+}
+
+const { tag } = Astro.props;
+const articles = await getCollection("blogapi", ({ data }) =>
+  tag.data.articles.includes(data.id),
+);
+---
+<h1>{tag.data.name}</h1>
+<ul>
+  {articles.map((article) => (
+    <li><a href={`/articles/${article.data.id}/`}>{article.data.title}</a></li>
+  ))}
+</ul>
+```
+
+Only materialized articles are aggregated — an article skipped for having no
+thumbnail never appears in `tags.json`, so tag pages and the article
+collection always agree.
 
 ## Generated files
 
