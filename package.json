@@ -1,0 +1,38 @@
+{
+  "name": "@miyamo2/astro-loader-blogapi-miyamo-today",
+  "version": "0.1.0",
+  "description": "Astro integration that sources articles from blogapi.miyamo.today as local markdown content and thumbnails",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/miyamo2/astro-loader-blogapi-miyamo-today.git"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "@miyamo2:registry": "https://npm.pkg.github.com"
+  },
+  "main": "index.js",
+  "types": "index.d.ts",
+  "type": "module",
+  "scripts": {
+    "prepublishOnly": "bun run build",
+    "build": "bun build ./src/index.ts --outdir ./ --target node --packages external && tsc",
+    "graphqlgen": "cd ./src && bunx graphql-codegen generate"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "astro": "^5.1.1",
+    "typescript": "^5.7.2"
+  },
+  "peerDependencies": {
+    "astro": "^5.0.0"
+  },
+  "dependencies": {
+    "@formkit/tempo": "^0.1.2",
+    "@graphql-codegen/cli": "^5.0.3",
+    "@graphql-codegen/typescript-graphql-request": "^6.2.0",
+    "graphql": "16.9.0",
+    "graphql-request": "^6.1.0",
+    "graphql-tag": "^2.12.6",
+    "yaml": "^2.7.0"
+  }
+}
