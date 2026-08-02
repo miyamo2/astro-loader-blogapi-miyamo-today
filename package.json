@@ -1,6 +1,6 @@
 {
   "name": "@miyamo2/astro-loader-blogapi-miyamo-today",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Astro integration that sources articles from blogapi.miyamo.today as local markdown content and thumbnails",
   "repository": {
     "type": "git",
