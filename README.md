@@ -1,6 +1,6 @@
 # astro-loader-blogapi-miyamo-today
 
-Astro (v5+) integration that sources articles from blogapi.miyamo.today (GraphQL).
+Astro (v7+) integration that sources articles from blogapi.miyamo.today (GraphQL).
 
 Successor of [gatsby-source-blogapi-miyamo-today](https://github.com/miyamo2/gatsby-source-blogapi-miyamo-today).
 
